@@ -6,6 +6,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+app/sync_to_vm.py
 
 # --- IDE / 编辑器 ---
 .vscode/
