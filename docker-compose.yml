@@ -1,0 +1,37 @@
+services:
+  # 服务1：数据库 (MySQL)
+  db:
+    image: mysql:8.0
+    container_name: my_compose_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./mysql_conf/my.cnf:/etc/mysql/conf.d/custom.cnf
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # 服务2：Python 应用
+  web:
+    build: ./app
+    container_name: my_compose_web
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # 这里直接用服务名 'db'，Docker 内部会自动解析这个域名！
+      DB_HOST: db
+      DB_USER: root
+      DB_PASS: Root@123456
+      DB_NAME: testdb
+    command: tail -f /dev/null
+volumes:
+  db_data:

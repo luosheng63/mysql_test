@@ -1,0 +1,28 @@
+# --- Python ---
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# --- IDE / 编辑器 ---
+.vscode/
+.idea/
+
+# --- 环境密钥 (非常重要！) ---
+.env
+*.secret
+
+# --- 系统 / 临时文件 ---
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- 你自己的脚本/日志 ---
+backup/
+*.sql
+error_dump.log
+sync_db.bat
+CWindowssystem32cmd.exe.txt  <-- 这个看起来像是误触生成的，一定要忽略
