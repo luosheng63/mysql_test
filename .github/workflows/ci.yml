@@ -1,0 +1,35 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. 检出代码
+      uses: actions/checkout@v3
+
+    - name: 2. 设置 Python 环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: 3. 安装依赖
+      run: |
+        cd app
+        pip install -r requirements.txt
+
+    - name: 4. 代码检查 (Lint)
+      run: |
+        pip install flake8
+        # 检查 app 目录下的代码，忽略行长度限制
+        flake8 app/*.py --max-line-length=120
+
+    - name: 5. 构建 Docker 镜像 (验证用)
+      run: |
+        docker build -t mysql-test-app:${{ github.sha }} ./app
