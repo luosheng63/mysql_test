@@ -1,0 +1,8 @@
+# 对所有文件自动处理换行符，但提交时转为 LF，检出时转为 CRLF（Windows默认）
+* text=auto
+
+# 强制规定 Shell 脚本必须是 LF 换行（非常重要！）
+*.sh text eol=lf
+
+# 规定 Python 文件也是 LF
+*.py text eol=lf

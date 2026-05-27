@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Management</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background-color: #f9f9f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .form-group { margin-bottom: 15px; }
+        label { display: inline-block; width: 60px; }
+        input[type="text"], input[type="number"], select {
+            padding: 8px; width: 200px; border: 1px solid #ccc; border-radius: 4px;
+        }
+        button, .btn {
+            padding: 8px 15px; background-color: #4CAF50; color: white; 
+            border: none; border-radius: 4px; cursor: pointer; text-decoration: none;
+        }
+        button:hover, .btn:hover { background-color: #45a049; }
+        .btn-delete { background-color: #f44336; }
+        .btn-delete:hover { background-color: #da190b; }
+        .btn-edit { background-color: #008CBA; }
+        .btn-edit:hover { background-color: #007399; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>User List</h1>
+    
+    <!-- 添加用户表单 -->
+    <h2>Add New User</h2>
+    <form action="/add" method="post">
+        <div class="form-group">
+            <label>Name:</label>
+            <input type="text" name="name" required placeholder="Enter name">
+        </div>
+        <div class="form-group">
+            <label>Gender:</label>
+            <select name="gender">
+                <option value="男">男</option>
+                <option value="女">女</option>
+                <option value="未知" selected>未知</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Age:</label>
+            <input type="number" name="age" required placeholder="Enter age">
+        </div>
+        <button type="submit">Add User</button>
+    </form>
+
+    <hr>
+
+    <!-- 用户列表 -->
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Gender</th>
+            <th>Age</th>
+            <th>Actions</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.gender }}</td>
+            <td>{{ user.age }}</td>
+            <td>
+                <a href="/edit/{{ user.id }}" class="btn btn-edit">Edit</a>
+                <a href="/delete/{{ user.id }}" class="btn btn-delete" onclick="return confirm('Are you sure to delete this user?');">Delete</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5" style="text-align: center;">No users found. Add one above!</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+</body>
+</html>

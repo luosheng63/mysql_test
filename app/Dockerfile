@@ -17,6 +17,6 @@ COPY . .
 # 默认执行的命令（我们先让它什么都不做，或者跑个测试）
 # 注意：这里我们不急着启动脚本，因为数据库启动需要几秒钟，我们后面在 compose 里处理
 # RUN chmod +x ./start.sh
-# CMD ["sh", "./start.sh"]
+CMD ["sh", "./start.sh"]
 # CMD ["tail", "-f", "/dev/null"]
-CMD ["python", "database.py"]
+# CMD ["python", "database.py"]
