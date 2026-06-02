@@ -25,7 +25,8 @@ def get_connection():
             database=DB_NAME,
             charset='utf8mb4'
         )
-        return conn
+        if conn.is_connected():
+            return conn
     except Error as e:
         print(f"❌ 连接数据库 {DB_NAME} 失败: {e}")
         return None
