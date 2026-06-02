@@ -3,10 +3,16 @@ import os
 from mysql.connector import Error
 
 # --- 配置读取 ---
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_USER = os.getenv('DB_USER', 'root')
-DB_PASS = os.getenv('DB_PASS', 'Root@123456')
-DB_NAME = os.getenv('DB_NAME', 'testdb')
+DB_HOST = os.getenv('DB_HOST')
+DB_USER = os.getenv('DB_USER')
+DB_PASS = os.getenv('DB_PASS')
+DB_NAME = os.getenv('DB_NAME')
+
+# 校验：确保环境变量存在
+if not all([DB_HOST, DB_USER, DB_PASS, DB_NAME]):
+    raise RuntimeError(
+        "❌ 缺少数据库环境变量！请检查 DB_HOST, DB_USER, DB_PASS, DB_NAME"
+    )
 
 # --- 连接管理 ---
 def get_connection():
