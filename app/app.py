@@ -1,7 +1,6 @@
 # app/app.py
 from flask import Flask, render_template, request, redirect, url_for
 from database import get_all_users, add_user, delete_user, update_user, get_user_by_id
-import os
 
 app = Flask(__name__, template_folder='templates')
 
