@@ -2,12 +2,12 @@
 from flask import Blueprint, request, jsonify
 import mysql.connector
 import os
-from datetime import datetime, timezone
 from security import decode_token
 from schemas import UpdateProfileSchema
 from marshmallow import ValidationError
 
 profile_bp = Blueprint('profile', __name__)
+
 
 def get_db_connection():
     try:
@@ -21,12 +21,14 @@ def get_db_connection():
     except mysql.connector.Error as err:
         raise Exception(f"数据库连接失败: {err}")
 
+
 def get_user_info(user_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("""
-            SELECT id, phone, nickname, avatar_url, gender, birthday, created_at
+            SELECT id, phone, nickname, avatar_url,
+                    gender, birthday, created_at
             FROM users WHERE id = %s
         """, (user_id,))
         user = cursor.fetchone()
@@ -39,29 +41,35 @@ def get_user_info(user_id):
         conn.close()
 
 # 获取个人资料（GET）
+
+
 @profile_bp.route('/api/profile', methods=['GET'])
 def get_profile():
-    token = request.cookies.get('token') or request.headers.get('Authorization', '').replace('Bearer ', '')
+    token = request.cookies.get('token') or request.headers.get(
+        'Authorization', '').replace('Bearer ', '')
     if not token:
         return jsonify({"error": "未授权"}), 401
-    
+
     payload = decode_token(token)
     if not payload:
         return jsonify({"error": "Token无效或已过期"}), 401
-    
+
     user = get_user_info(payload['user_id'])
     if not user:
         return jsonify({"error": "用户不存在"}), 404
-    
+
     return jsonify({"data": user}), 200
 
 # ✅ 更新个人资料（PUT）—— 这就是你要的功能！
+
+
 @profile_bp.route('/api/profile', methods=['PUT'])
 def update_profile():
-    token = request.cookies.get('token') or request.headers.get('Authorization', '').replace('Bearer ', '')
+    token = request.cookies.get('token') or request.headers.get(
+        'Authorization', '').replace('Bearer ', '')
     if not token:
         return jsonify({"error": "未授权"}), 401
-    
+
     payload = decode_token(token)
     if not payload:
         return jsonify({"error": "Token无效或已过期"}), 401
@@ -75,35 +83,35 @@ def update_profile():
     user_id = payload['user_id']
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     try:
         update_fields = []
         params = []
-        
+
         if 'nickname' in data:
             update_fields.append("nickname = %s")
             params.append(data['nickname'])
-        
+
         if 'gender' in data:
             update_fields.append("gender = %s")
             params.append(data['gender'])
-        
+
         if 'birthday' in data:
             update_fields.append("birthday = %s")
             params.append(data['birthday'])
-        
+
         if not update_fields:
             return jsonify({"error": "没有要更新的字段"}), 400
-        
+
         update_fields.append("updated_at = NOW()")
         params.append(user_id)
-        
+
         sql = f"UPDATE users SET {', '.join(update_fields)} WHERE id = %s"
         cursor.execute(sql, params)
         conn.commit()
-        
+
         return jsonify({"message": "更新成功"}), 200
-        
+
     except Exception as e:
         conn.rollback()
         return jsonify({"error": f"更新失败: {str(e)}"}), 500
