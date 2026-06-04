@@ -1,45 +1,63 @@
-# app/app.py
-from flask import Flask, render_template, request, redirect, url_for
-from database import get_all_users, add_user, delete_user, update_user, get_user_by_id
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+import os
+from datetime import datetime, timezone
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
 
+# 延迟导入蓝图
+def register_blueprints():
+    from auth import auth_bp
+    from profile import profile_bp
+    
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(profile_bp)
 
 @app.route('/')
 def index():
-    users = get_all_users()
-    return render_template('index.html', users=users)
+    return render_template('login.html')
 
+@app.route('/register')
+def register_page():
+    return render_template('register.html')
 
-@app.route('/add', methods=['POST'])
-def add():
-    name = request.form['name']
-    gender = request.form.get('gender', '未知')  # 如果没有选择性别，默认为未知
-    age = request.form['age']
-    if name and age:
-        add_user(name, gender, int(age))
-    return redirect(url_for('index'))
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
 
+@app.route('/profile')
+def profile_page():
+    # 检查是否登录
+    token = request.cookies.get('token') or request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return redirect('/login')
+    
+    from security import decode_token
+    payload = decode_token(token)
+    if not payload:
+        return redirect('/login')
+    
+    # 获取用户信息
+    from profile import get_user_info
+    user = get_user_info(payload['user_id'])
+    if not user:
+        return redirect('/login')
+    
+    return render_template('profile.html', user=user)
 
-@app.route('/delete/<int:user_id>')
-def delete(user_id):
-    delete_user(user_id)
-    return redirect(url_for('index'))
-
-
-@app.route('/edit/<int:user_id>', methods=['GET', 'POST'])
-def edit(user_id):
-    if request.method == 'POST':
-        name = request.form['name']
-        gender = request.form.get('gender', '未知')  # 如果没有选择性别，默认为未知
-        age = request.form['age']
-        update_user(user_id, name, gender, int(age))
-        return redirect(url_for('index'))
-
-    user = get_user_by_id(user_id)
-    return render_template('edit.html', user=user)
-
+@app.route('/logout')
+def logout():
+    # 清除 session 和 cookie
+    session.clear()
+    response = redirect('/login')
+    response.delete_cookie('token')
+    flash('您已成功退出登录', 'success')
+    return response
 
 if __name__ == '__main__':
-    # 监听 0.0.0.0，这样容器外部也能访问
+    from database import setup_database_and_tables
+    setup_database_and_tables()
+    
+    register_blueprints()
+    
     app.run(host='0.0.0.0', port=5000, debug=True)

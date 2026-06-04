@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}个人资料{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>个人资料</h2>
+    
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="avatar">
+                <img src="{{ user.avatar_url or '/static/default-avatar.png' }}" alt="头像">
+                <button class="change-avatar-btn">更换头像</button>
+            </div>
+            <div class="user-info">
+                <h3>{{ user.nickname }}</h3>
+                <p>手机号: {{ user.phone }}</p>
+                <p>注册时间: {{ user.created_at }}</p>
+            </div>
+        </div>
+        
+        <form id="profileForm">
+            <div class="form-group">
+                <label for="nickname">昵称</label>
+                <input type="text" id="nickname" name="nickname" value="{{ user.nickname }}" maxlength="12">
+            </div>
+            
+            <div class="form-group">
+                <label for="gender">性别</label>
+                <select id="gender" name="gender">
+                    <option value="0" {% if user.gender == 0 %}selected{% endif %}>未知</option>
+                    <option value="1" {% if user.gender == 1 %}selected{% endif %}>男</option>
+                    <option value="2" {% if user.gender == 2 %}selected{% endif %}>女</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="birthday">生日</label>
+                <input type="date" id="birthday" name="birthday" value="{{ user.birthday }}">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">保存修改</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// 页面加载时获取用户资料
+document.addEventListener('DOMContentLoaded', async function() {
+    const result = await apiRequest('/api/profile', 'GET');
+    if (result) {
+        // 更新页面显示
+        document.querySelector('.user-info h3').textContent = result.data.nickname;
+    } else {
+        window.location.href = '/login';
+    }
+});
+
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    
+    const result = await apiRequest('/api/profile', 'PUT', data);
+    
+    if (result) {
+        alert('个人资料更新成功！');
+        location.reload();
+    }
+});
+</script>
+{% endblock %}

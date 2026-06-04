@@ -7,6 +7,7 @@ __pycache__/
 dist/
 build/
 app/sync_to_vm.py
+app/query_db.py
 
 # --- IDE / 编辑器 ---
 .vscode/
@@ -26,4 +27,5 @@ backup/
 *.sql
 error_dump.log
 sync_db.bat
+./log
 CWindowssystem32cmd.exe.txt  <-- 这个看起来像是误触生成的，一定要忽略

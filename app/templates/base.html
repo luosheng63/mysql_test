@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}用户系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- 全局 API 请求函数 -->
+    <script>
+        // 通用 AJAX 请求函数
+        async function apiRequest(url, method = 'GET', data = null) {
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            
+            const token = localStorage.getItem('token');
+            if (token) {
+                options.headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || '请求失败');
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('API请求错误:', error);
+                alert(error.message);
+                return null;
+            }
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">✨ 用户系统</a>
+            <div class="nav-links">
+                {% if session.user_id %}
+                    <span>你好, {{ session.nickname }}</span>
+                    <a href="/profile">个人中心</a>
+                    <a href="/logout">退出</a>
+                {% else %}
+                    <a href="/login">登录</a>
+                    <a href="/register">注册</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

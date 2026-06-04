@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}用户登录{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>用户登录</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="phone">手机号码</label>
+            <input type="tel" id="phone" name="phone" required placeholder="请输入手机号">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" name="password" required placeholder="请输入密码">
+        </div>
+        
+        <div class="form-group remember-me">
+            <input type="checkbox" id="rememberMe" name="rememberMe">
+            <label for="rememberMe">记住我（30天内自动登录）</label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">登录</button>
+        
+        <div class="form-footer">
+            还没有账号？ <a href="/register">立即注册</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('登录成功！');
+            
+            // 存储 Token
+            localStorage.setItem('token', result.token);
+            
+            // 设置 Cookie（关键！）
+            document.cookie = `token=${result.token}; path=/; max-age=2592000`;
+            
+            // 跳转到个人资料页
+            window.location.href = '/profile';
+        } else {
+            alert(result.error || '登录失败');
+        }
+    } catch (error) {
+        alert('网络错误，请重试');
+    }
+});
+</script>
+{% endblock %}
