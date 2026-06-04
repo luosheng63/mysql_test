@@ -1,0 +1,12 @@
+[flake8]
+max-line-length = 120
+exclude =
+    venv,
+    migrations,
+    __pycache__
+ignore =
+    W291,   # trailing whitespace
+    W292,   # no newline at end of file
+    W293,   # blank line contains whitespace
+    E302,   # expected 2 blank lines（Black 会帮你管）
+    E305    # expected 2 blank lines after class or function
