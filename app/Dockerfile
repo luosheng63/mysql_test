@@ -1,5 +1,5 @@
 # 使用官方 Python 镜像作为基础
-FROM python:3.9-slim
+FROM python:3.13-slim
 
 #防止python输出缓冲，确保日志实时可见
 ENV PYTHONUNBUFFERED=1
