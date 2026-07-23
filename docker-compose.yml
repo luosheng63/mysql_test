@@ -30,7 +30,7 @@ services:
       DB_PASS: Root@123456
       DB_NAME: testdb
     ports:              # ✅ 新增：端口映射
-      - "8080:5000"
+      - "5000:5000"
     command: python app.py   # ✅ 修改：启动 Flask 应用
 
 volumes:

@@ -1,0 +1,224 @@
+{
+  "info": {
+    "name": "用户管理系统 API 测试 (V2.0 安全增强版)",
+    "description": "涵盖短信、注册、登录、鉴权及资料管理的自动化测试脚本。\n\n新增：边界测试、安全测试（SQL注入）、业务逻辑测试（锁定机制）。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:5000" },
+    { "key": "phone", "value": "" },
+    { "key": "code", "value": "" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. 短信服务",
+      "item": [
+        {
+          "name": "SMS_01 发送验证码 (正常)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const randomPhone = \"13\" + Math.floor(Math.random() * 900000000 + 100000000);",
+                  "pm.environment.set(\"phone\", randomPhone);",
+                  "console.log(\"Generated Phone:\", randomPhone);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const jsonData = pm.response.json();",
+                  "pm.test(\"Returned debug code\", () => {",
+                  "    pm.expect(jsonData).to.have.property('_debug_code');",
+                  "    pm.environment.set(\"code\", jsonData._debug_code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"phone\": \"{{phone}}\" }" },
+            "url": "{{baseUrl}}/api/send-code"
+          }
+        },
+        {
+          "name": "SMS_03 发送验证码 (10位手机号)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 (Bad Request)\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"phone\": \"1380013800\" }" },
+            "url": "{{baseUrl}}/api/send-code"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. 用户注册",
+      "item": [
+        {
+          "name": "REG_01 用户注册 (成功)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", () => pm.response.to.have.status(201));",
+                  "const jsonData = pm.response.json();",
+                  "pm.test(\"Returned token\", () => {",
+                  "    pm.environment.set(\"token\", jsonData.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"phone\": \"{{phone}}\", \"code\": \"{{code}}\", \"password\": \"Aa123456\" }" },
+            "url": "{{baseUrl}}/api/register"
+          }
+        },
+        {
+          "name": "REG_08 用户注册 (SQL注入尝试)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 or 404\", () => {",
+                  "    pm.expect([400, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"phone\": \"' OR '1'='1\", \"code\": \"{{code}}\", \"password\": \"Aa123456\" }" },
+            "url": "{{baseUrl}}/api/register"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. 用户登录",
+      "item": [
+        {
+          "name": "LOG_01 用户登录 (成功)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"phone\": \"{{phone}}\", \"password\": \"Aa123456\" }" },
+            "url": "{{baseUrl}}/api/login"
+          }
+        },
+        {
+          "name": "LOG_05 用户登录 (连续失败锁定)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// 此脚本需要配合 Runner 或多次手动点击，模拟连续失败",
+                  "for (let i = 0; i < 5; i++) {",
+                  "  pm.sendRequest({",
+                  "    url: pm.environment.get('baseUrl') + '/api/login',",
+                  "    method: 'POST',",
+                  "    header: { 'Content-Type': 'application/json' },",
+                  "    body: { mode: 'raw', raw: JSON.stringify({ phone: pm.environment.get('phone'), password: 'WrongPass' }) }",
+                  "  }, (err, res) => {",
+                  "    console.log('Attempt', i+1, 'Status:', res.code);",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 (Locked)\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error message contains locked\", () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.include('锁定');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"phone\": \"{{phone}}\", \"password\": \"WrongPass\" }" },
+            "url": "{{baseUrl}}/api/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. 鉴权与资料",
+      "item": [
+        {
+          "name": "PROF_01 获取个人资料",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/profile"
+          }
+        },
+        {
+          "name": "PROF_06 更新资料 (越权尝试 - 修改ID)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 or 403\", () => {",
+                  "    pm.expect([400, 403]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"id\": 999, \"nickname\": \"Hacker\" }" },
+            "url": "{{baseUrl}}/api/profile"
+          }
+        }
+      ]
+    }
+  ]
+}
